@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabaseBrowser, supabaseConfigured } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,14 +31,27 @@ export default function LoginForm() {
     setBusy(true);
     const supabase = supabaseBrowser();
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setError(error.message);
-      else setNotice("Account created. Check your email if confirmation is enabled, then sign in.");
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(error.message);
+        posthog.captureException(error, { extra: { context: "signup" } });
       } else {
+        if (data.user) {
+          posthog.identify(data.user.id);
+          posthog.capture("user_signed_up", { method: "email" });
+        }
+        setNotice("Account created. Check your email if confirmation is enabled, then sign in.");
+      }
+    } else {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        posthog.captureException(error, { extra: { context: "signin" } });
+      } else {
+        if (data.user) {
+          posthog.identify(data.user.id);
+          posthog.capture("user_signed_in", { method: "email" });
+        }
         // refresh() re-runs middleware/server components with the new cookie
         router.push("/dashboard");
         router.refresh();

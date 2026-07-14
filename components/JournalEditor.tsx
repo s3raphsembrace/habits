@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import posthog from "posthog-js";
 
 interface NoteFields {
   activities: string;
@@ -72,6 +73,13 @@ export default function JournalEditor() {
     if (res.ok) {
       setDirty(false);
       setSavedAt(new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
+      posthog.capture("journal_saved", {
+        has_activities: fields.activities.trim().length > 0,
+        has_meals: fields.meals.trim().length > 0,
+        has_goals: fields.goals.trim().length > 0,
+        has_notes: fields.notes.trim().length > 0,
+        is_today: date === toDateString(new Date()),
+      });
     } else {
       const body = await res.json().catch(() => ({}));
       setError(body.error ?? "Could not save.");

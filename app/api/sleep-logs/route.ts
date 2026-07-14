@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { routeContext } from "@/lib/supabase/server";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const createLogSchema = z
   .object({
@@ -51,5 +52,20 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const sleepMs =
+    new Date(parsed.data.sleep_end).getTime() - new Date(parsed.data.sleep_start).getTime();
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "sleep_log_created",
+    properties: {
+      duration_hours: Math.round((sleepMs / 3_600_000) * 10) / 10,
+      has_energy_rating: parsed.data.energy_rating != null,
+      has_note: Boolean(parsed.data.note),
+    },
+  });
+  await posthog.flush();
+
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

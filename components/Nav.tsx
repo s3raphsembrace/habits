@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", authed: true },
@@ -29,6 +30,8 @@ export default function Nav() {
   }, []);
 
   async function signOut() {
+    posthog.capture("user_signed_out");
+    posthog.reset();
     await supabaseBrowser().auth.signOut();
     router.push("/");
     router.refresh();

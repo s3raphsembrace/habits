@@ -5,6 +5,7 @@ import EnergyRhythmChart from "@/components/EnergyRhythmChart";
 import NoisePlayer from "@/components/NoisePlayer";
 import type { SleepInsights } from "@/lib/sleepDebt";
 import type { Recommendation } from "@/lib/recommendations";
+import posthog from "posthog-js";
 
 interface LogRow {
   id: string;
@@ -44,8 +45,12 @@ export default function DashboardView() {
 
   async function deleteLog(id: string) {
     const res = await fetch(`/api/sleep-logs/${id}`, { method: "DELETE" });
-    if (res.ok) load();
-    else setError("Could not delete that log.");
+    if (res.ok) {
+      posthog.capture("sleep_log_deleted");
+      load();
+    } else {
+      setError("Could not delete that log.");
+    }
   }
 
   const fmt = (iso: string) =>

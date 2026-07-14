@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import posthog from "posthog-js";
 
 export default function ContactForm() {
   const [name, setName] = useState("");
@@ -37,6 +38,7 @@ export default function ContactForm() {
     setBusy(false);
 
     if (res.ok) {
+      posthog.capture("contact_message_submitted");
       setSent(true);
     } else {
       const body = await res.json().catch(() => ({}));

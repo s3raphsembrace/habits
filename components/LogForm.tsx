@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import posthog from "posthog-js";
 
 /** Converts a datetime-local input value to an ISO string. */
 function localToIso(local: string): string {
@@ -44,6 +45,12 @@ export default function LogForm() {
     setBusy(false);
 
     if (res.ok) {
+      const sleepMs = new Date(sleepEnd).getTime() - new Date(sleepStart).getTime();
+      posthog.capture("sleep_log_submitted", {
+        duration_hours: Math.round((sleepMs / 3_600_000) * 10) / 10,
+        has_energy_rating: energy !== "",
+        has_note: note.trim().length > 0,
+      });
       router.push("/dashboard");
       router.refresh();
     } else {
