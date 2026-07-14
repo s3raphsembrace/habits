@@ -1,17 +1,40 @@
-/* Somnia — single global stylesheet. Mobile-first; desktop rules in the
-   min-width media queries at the bottom. */
+/* Habits: Sleep Quality — single global stylesheet.
+   Two themes via CSS custom properties: :root is the light (default) theme,
+   [data-theme="dark"] overrides it. All status/chart colors are validated
+   per-theme against their surface (dataviz six-checks) — if you change one,
+   re-run the validator. Mobile-first; desktop rules in the media queries. */
 
 :root {
-  --bg: #0f1220;
-  --surface: #1a1e33;
-  --surface-2: #232849;
-  --text: #e8eaf6;
-  --muted: #9aa0c3;
-  --accent: #8b9cf7;
-  --accent-strong: #6478f0;
-  --danger: #f07178;
-  --warn: #ffcb6b;
-  --radius: 12px;
+  --bg: #eeefe9;
+  --surface: #ffffff;
+  --surface-2: #e8e8e0;
+  --border: #d6d5cc;
+  --text: #151515;
+  --muted: #5e5e58;
+  --accent: #f54e00;
+  --accent-strong: #d84300;
+  --danger: #d43a47;
+  --warn: #a86e00;
+  --good: #2f8f4e;
+  --chart-line: #f54e00;
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] {
+  --bg: #1c1c1a;
+  --surface: #232320;
+  --surface-2: #34342f;
+  --border: #3c3c35;
+  --text: #eeefe9;
+  --muted: #9a9a92;
+  --accent: #f0703a;
+  --accent-strong: #e05a26;
+  --danger: #d94f58;
+  --warn: #b5801f;
+  --good: #44a368;
+  --chart-line: #e05a26;
+  --shadow: none;
 }
 
 * {
@@ -32,7 +55,7 @@ h1, h2, h3 {
 }
 
 h1 { font-size: 1.75rem; }
-h2 { font-size: 1.25rem; margin-top: 2rem; }
+h2 { font-size: 1.2rem; margin-top: 2rem; }
 
 p { margin: 0.25rem 0 0.75rem; }
 
@@ -43,18 +66,17 @@ a:hover { text-decoration: underline; }
 
 /* Header / nav */
 .site-header {
-  border-bottom: 1px solid var(--surface-2);
-  background: rgba(15, 18, 32, 0.9);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   position: sticky;
   top: 0;
-  backdrop-filter: blur(8px);
   z-index: 10;
 }
 
 .nav {
   max-width: 960px;
   margin: 0 auto;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -67,14 +89,25 @@ a:hover { text-decoration: underline; }
 
 .nav-links {
   display: flex;
-  gap: 1rem;
+  gap: 0.9rem;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.nav-links a { color: var(--muted); }
+.nav-links a { color: var(--muted); font-weight: 500; }
 .nav-links a.active,
 .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+.theme-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.theme-toggle:hover { background: var(--surface-2); }
 
 /* Layout */
 .container {
@@ -86,7 +119,7 @@ a:hover { text-decoration: underline; }
 .narrow { max-width: 480px; margin: 0 auto; }
 
 .site-footer {
-  border-top: 1px solid var(--surface-2);
+  border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.85rem;
   text-align: center;
@@ -96,8 +129,9 @@ a:hover { text-decoration: underline; }
 /* Cards & grids */
 .card {
   background: var(--surface);
-  border: 1px solid var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 1rem 1.25rem;
 }
 
@@ -111,7 +145,7 @@ a:hover { text-decoration: underline; }
 .stat-grid { grid-template-columns: repeat(2, 1fr); }
 
 .stat { text-align: center; }
-.stat-value { display: block; font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+.stat-value { display: block; font-size: 1.6rem; font-weight: 700; color: var(--accent-strong); }
 .stat-label { color: var(--muted); font-size: 0.85rem; }
 
 .rec-high { border-left: 4px solid var(--danger); }
@@ -133,12 +167,12 @@ input, select, textarea {
   font: inherit;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--surface-2);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 0.6rem 0.75rem;
 }
 
-input:focus, select:focus, textarea:focus, .button:focus {
+input:focus, select:focus, textarea:focus, .button:focus, .theme-toggle:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -148,16 +182,21 @@ input:focus, select:focus, textarea:focus, .button:focus {
   font: inherit;
   font-weight: 600;
   color: var(--text);
-  background: var(--surface-2);
-  border: 1px solid var(--surface-2);
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 1.1rem;
   cursor: pointer;
 }
+.button:hover { background: var(--surface-2); text-decoration: none; }
 
-.button.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
-.button:hover { filter: brightness(1.1); text-decoration: none; }
-.button:disabled { opacity: 0.6; cursor: not-allowed; }
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.button.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.button:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .link-button {
   background: none;
@@ -177,7 +216,7 @@ input:focus, select:focus, textarea:focus, .button:focus {
 .table-wrap { overflow-x: auto; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--surface-2); }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; }
 
 /* Noise player */
@@ -189,24 +228,62 @@ th { color: var(--muted); font-weight: 600; }
 .rhythm-wrap { position: relative; }
 .rhythm-svg { display: block; width: 100%; height: auto; }
 .rhythm-axis { fill: var(--muted); font-size: 12px; }
-.rhythm-tick { stroke: var(--surface-2); stroke-width: 1; }
+.rhythm-tick { stroke: var(--border); stroke-width: 1; }
 .rhythm-label { fill: var(--text); font-size: 12px; font-weight: 600; }
-.rhythm-label-mel { fill: var(--accent); }
+.rhythm-label-mel { fill: var(--accent-strong); }
 .rhythm-now { stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 4 4; }
 .rhythm-label-now { fill: var(--warn); }
 .rhythm-crosshair { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.rhythm-line { stroke: var(--chart-line); }
+.rhythm-area { fill: var(--chart-line); }
+.rhythm-band { fill: var(--chart-line); }
+.rhythm-dot { fill: var(--chart-line); stroke: var(--surface); }
 .rhythm-tooltip {
   position: absolute;
   transform: translate(-50%, -130%);
-  background: var(--surface-2);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 0.3rem 0.6rem;
   font-size: 0.85rem;
   white-space: nowrap;
   pointer-events: none;
   z-index: 5;
 }
+
+/* Sleep score gauge */
+.gauge-card { text-align: center; }
+.gauge-svg { display: block; width: min(280px, 100%); margin: 0 auto; height: auto; }
+.gauge-track { stroke: var(--surface-2); }
+.gauge-number { fill: var(--text); font-size: 40px; font-weight: 700; }
+.gauge-sub { fill: var(--muted); font-size: 12px; }
+.gauge-value-arc { transition: stroke-dashoffset 0.8s ease, stroke 0.3s ease; }
+.gauge-label { font-weight: 700; font-size: 1.1rem; margin: 0.25rem 0 0.1rem; }
+.gauge-parts { font-size: 0.85rem; }
+
+/* Coach */
+.coach-card { display: flex; flex-direction: column; gap: 0.75rem; }
+.coach-starters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.coach-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.coach-bubble {
+  border-radius: var(--radius);
+  padding: 0.55rem 0.8rem;
+  max-width: 85%;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}
+.coach-user { align-self: flex-end; background: var(--accent); color: #fff; }
+.coach-assistant { align-self: flex-start; background: var(--surface-2); }
+.coach-input-row { display: flex; gap: 0.5rem; }
+.coach-input-row input { flex: 1; }
 
 /* Journal */
 .date-nav { display: flex; align-items: center; gap: 1rem; margin: 1rem 0 1.5rem; }

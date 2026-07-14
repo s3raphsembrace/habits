@@ -6,7 +6,7 @@ export default function Home() {
       <section className="hero">
         <h1>Pay down your sleep debt. Reclaim your energy.</h1>
         <p>
-          Somnia calculates your sleep debt from the nights you log, estimates your melatonin
+          Habits calculates your sleep debt from the nights you log, estimates your melatonin
           window from your habits, and gives you concrete, research-based steps to become a
           better sleeper — including when a nap actually helps.
         </p>

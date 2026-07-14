@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import CoachChat from "@/components/CoachChat";
 import EnergyRhythmChart from "@/components/EnergyRhythmChart";
 import NoisePlayer from "@/components/NoisePlayer";
+import SleepScoreGauge from "@/components/SleepScoreGauge";
 import type { SleepInsights } from "@/lib/sleepDebt";
 import type { Recommendation } from "@/lib/recommendations";
+import type { SleepScore } from "@/lib/sleepScore";
 
 interface LogRow {
   id: string;
@@ -16,6 +19,7 @@ interface LogRow {
 
 export default function DashboardView() {
   const [insights, setInsights] = useState<SleepInsights | null>(null);
+  const [score, setScore] = useState<SleepScore | null>(null);
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +38,7 @@ export default function DashboardView() {
     const insightsBody = await insightsRes.json();
     const logsBody = await logsRes.json();
     setInsights(insightsBody.insights);
+    setScore(insightsBody.sleepScore ?? null);
     setRecs(insightsBody.recommendations);
     setLogs(logsBody.logs);
   }, []);
@@ -60,6 +65,13 @@ export default function DashboardView() {
     <>
       <h1>Your sleep</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
+
+      {score && (
+        <section>
+          <h2>Sleep score</h2>
+          <SleepScoreGauge score={score} />
+        </section>
+      )}
 
       {insights && (
         <section>
@@ -107,6 +119,11 @@ export default function DashboardView() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section>
+        <h2>Coach</h2>
+        <CoachChat />
       </section>
 
       <section>

@@ -1,6 +1,6 @@
-# Somnia — sleep debt & energy tracker
+# Habits: Sleep Quality — sleep debt & energy tracker
 
-Somnia calculates your **sleep debt** (rolling 14-day ledger of sleep owed vs. slept),
+Habits: Sleep Quality (formerly Somnia) calculates your **sleep debt** (rolling 14-day ledger of sleep owed vs. slept),
 estimates your **melatonin window** from your habitual bedtime, tracks self-reported
 **energy**, and turns the numbers into concrete recommendations. It also ships a
 dependency-free brown-noise generator for winding down and a sleep science library.
@@ -71,6 +71,29 @@ times; `components/EnergyRhythmChart.tsx` renders it as a horizontal SVG timelin
 a hover tooltip. It's a model for timing guidance, not a measurement, and says so in
 the UI. The chart color (`#6478f0`) is validated for contrast/CVD on the dark surface.
 
+## Sleep score
+
+`lib/sleepScore.ts` computes a 0–100 composite over the 14-day window: sleep debt 35%,
+duration-vs-need 30%, bedtime consistency 20%, self-rated energy 15%. Components with
+no data drop out and weights renormalize. Shown on the dashboard as a semicircle gauge
+— red (<50 "Needs work"), yellow (50–74 "Fair"), green (≥75 "Good") — always paired
+with the text label, never color alone.
+
+## AI coach
+
+The dashboard Coach card answers questions grounded in your numbers (debt, score,
+melatonin window) and today's journal entry, via the **Gemini API**:
+
+1. Get a free API key at [aistudio.google.com](https://aistudio.google.com) (free tier,
+   no card; pay-as-you-go beyond it).
+2. Locally: add `GEMINI_API_KEY=...` to `.env.local`. On Vercel: Project → Settings →
+   Environment Variables → add `GEMINI_API_KEY`, then redeploy.
+3. Optional: `GEMINI_MODEL` overrides the default `gemini-2.5-flash`.
+
+Without a key the coach still works — it answers from the rule-based engine in
+`lib/recommendations.ts` and says so. The key stays server-side (`app/api/coach/route.ts`);
+it is never shipped to the browser.
+
 ## Journal
 
 **/notes** stores one row per user per day (`daily_notes`): Activities, Meals, Goals,
@@ -100,4 +123,13 @@ with sleep. Requires `supabase/migrations/002_daily_notes.sql` if your project p
 - Unit tests for `lib/sleepDebt.ts` (pure functions — trivially testable).
 - Rate-limit `/api/contact` before public deploy.
 
-> Somnia is an educational tool, not medical advice.
+> Habits: Sleep Quality is an educational tool, not medical advice.
+
+## Theming
+
+Light (default) and dark themes live entirely in `styles/globals.css` as CSS custom
+properties (`:root` = light, `[data-theme="dark"]` = dark), following a warm
+cream/white/orange palette. The nav toggle persists the choice to localStorage and an
+inline script in `app/layout.tsx` applies it before first paint. Chart and status
+colors (`--chart-line`, `--good`, `--warn`, `--danger`) are contrast/CVD-validated
+per theme — re-validate if you change them.

@@ -9,7 +9,8 @@ const DAY_MIN = 24 * 60;
 const W = 720;
 const H = 250;
 const PLOT = { left: 12, right: 708, top: 26, bottom: 192 };
-const LINE = "#6478f0"; // validated for dark surfaces (dataviz six-checks)
+// Curve/band color comes from the --chart-line token (validated per theme),
+// applied via CSS classes because var() doesn't work in SVG attributes.
 
 interface Props {
   medianWake: string | null;
@@ -126,7 +127,7 @@ export default function EnergyRhythmChart({ medianWake, medianBedtime, nightsLog
             y={PLOT.top}
             width={Math.max(melX2 - melX1, 2)}
             height={PLOT.bottom - PLOT.top}
-            fill={LINE}
+            className="rhythm-band"
             opacity={0.16}
             rx={4}
           />
@@ -163,8 +164,8 @@ export default function EnergyRhythmChart({ medianWake, medianBedtime, nightsLog
           />
 
           {/* Curve */}
-          <path d={areaPath} fill={LINE} opacity={0.12} />
-          <path d={linePath} fill="none" stroke={LINE} strokeWidth={2} strokeLinecap="round" />
+          <path d={areaPath} className="rhythm-area" opacity={0.12} />
+          <path d={linePath} fill="none" className="rhythm-line" strokeWidth={2} strokeLinecap="round" />
 
           {/* Direct labels */}
           {labels.map((l) => (
@@ -202,7 +203,7 @@ export default function EnergyRhythmChart({ medianWake, medianBedtime, nightsLog
           {hover && (
             <g>
               <line x1={hover.x} y1={PLOT.top} x2={hover.x} y2={PLOT.bottom} className="rhythm-crosshair" />
-              <circle cx={hover.x} cy={hover.y} r={4.5} fill={LINE} stroke="var(--surface)" strokeWidth={2} />
+              <circle cx={hover.x} cy={hover.y} r={4.5} className="rhythm-dot" strokeWidth={2} />
             </g>
           )}
         </svg>

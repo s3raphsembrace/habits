@@ -1,5 +1,5 @@
 {
-  "name": "somnia",
+  "name": "habits-sleep-quality",
   "version": "0.2.0",
   "private": true,
   "description": "Sleep debt & energy tracker — calculates sleep debt, melatonin window, and personalized sleep recommendations.",

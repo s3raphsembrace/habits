@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", authed: true },
@@ -38,7 +39,7 @@ export default function Nav() {
     <header className="site-header">
       <nav className="nav">
         <Link href="/" className="brand">
-          🌙 Somnia
+          🌙 Habits
         </Link>
         <div className="nav-links">
           {NAV_LINKS.filter((l) => !l.authed || signedIn).map((l) => (
@@ -55,6 +56,7 @@ export default function Nav() {
               Sign in
             </Link>
           )}
+          <ThemeToggle />
         </div>
       </nav>
     </header>

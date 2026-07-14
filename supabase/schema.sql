@@ -1,4 +1,4 @@
--- Somnia database schema. Run this in the Supabase SQL editor
+-- Habits: Sleep Quality database schema. Run this in the Supabase SQL editor
 -- (dashboard -> SQL Editor -> New query -> paste -> Run).
 
 -- ---------------------------------------------------------------------------

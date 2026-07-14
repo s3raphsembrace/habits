@@ -39,7 +39,7 @@ export default function LibraryPage() {
     <>
       <h1>Sleep knowledge library</h1>
       <p className="muted">
-        Short, actionable summaries of the research behind Somnia&apos;s recommendations.
+        Short, actionable summaries of the research behind our recommendations.
       </p>
       <div className="stack">
         {ARTICLES.map((a) => (
