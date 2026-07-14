@@ -1,9 +1,8 @@
 import Link from "next/link";
-import Layout from "@/components/Layout";
 
 export default function Home() {
   return (
-    <Layout title="Sleep debt & energy tracker">
+    <>
       <section className="hero">
         <h1>Pay down your sleep debt. Reclaim your energy.</h1>
         <p>
@@ -12,11 +11,11 @@ export default function Home() {
           better sleeper — including when a nap actually helps.
         </p>
         <div className="hero-actions">
-          <Link href="/login">
-            <a className="button primary">Get started free</a>
+          <Link href="/login" className="button primary">
+            Get started free
           </Link>
-          <Link href="/library">
-            <a className="button">Read the sleep library</a>
+          <Link href="/library" className="button">
+            Read the sleep library
           </Link>
         </div>
       </section>
@@ -51,6 +50,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

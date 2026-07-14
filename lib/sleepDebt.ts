@@ -30,6 +30,7 @@ export interface SleepInsights {
   avgSleepHours: number | null;
   avgEnergy: number | null;
   medianBedtime: string | null; // "HH:MM" local-style clock time
+  medianWake: string | null; // "HH:MM"
   melatoninWindow: { start: string; end: string } | null; // "HH:MM"
   nightsLogged: number;
 }
@@ -58,26 +59,42 @@ export function computeSleepDebt(
   return Math.min(Math.max(debt, 0), MAX_TRACKED_DEBT_HOURS);
 }
 
-/** Minutes past midnight, shifted so evening times sort together (17:00 -> 0). */
-function bedtimeMinutes(iso: string): number {
+const DAY_MIN = 24 * 60;
+/** Bedtimes cluster around midnight, so shift the day boundary to 5pm. */
+const BEDTIME_ANCHOR = 17 * 60;
+/** Wake times cluster around morning, so shift the day boundary to 5am. */
+const WAKE_ANCHOR = 5 * 60;
+
+/** Minutes past midnight, shifted so times near the anchor sort together
+ *  (e.g. with a 5pm anchor, 23:30 and 00:30 are numerically adjacent). */
+function shiftedMinutes(iso: string, anchor: number): number {
   const d = new Date(iso);
   const mins = d.getHours() * 60 + d.getMinutes();
-  // Shift the day boundary to 5pm so 23:30 and 00:30 are numerically adjacent.
-  return (mins - 17 * 60 + 24 * 60) % (24 * 60);
+  return (mins - anchor + DAY_MIN) % DAY_MIN;
 }
 
-function minutesToClock(shifted: number): string {
-  const mins = (shifted + 17 * 60) % (24 * 60);
+function minutesToClock(shifted: number, anchor: number): string {
+  const mins = (shifted + anchor) % DAY_MIN;
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+function medianShifted(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
 export function medianBedtime(logs: SleepLog[]): string | null {
   if (logs.length === 0) return null;
-  const sorted = logs.map((l) => bedtimeMinutes(l.sleep_start)).sort((a, b) => a - b);
-  const mid = sorted[Math.floor(sorted.length / 2)];
-  return minutesToClock(mid);
+  const mid = medianShifted(logs.map((l) => shiftedMinutes(l.sleep_start, BEDTIME_ANCHOR)));
+  return minutesToClock(mid, BEDTIME_ANCHOR);
+}
+
+export function medianWakeTime(logs: SleepLog[]): string | null {
+  if (logs.length === 0) return null;
+  const mid = medianShifted(logs.map((l) => shiftedMinutes(l.sleep_end, WAKE_ANCHOR)));
+  return minutesToClock(mid, WAKE_ANCHOR);
 }
 
 /**
@@ -86,11 +103,10 @@ export function medianBedtime(logs: SleepLog[]): string | null {
  */
 export function melatoninWindow(logs: SleepLog[]): { start: string; end: string } | null {
   if (logs.length === 0) return null;
-  const sorted = logs.map((l) => bedtimeMinutes(l.sleep_start)).sort((a, b) => a - b);
-  const mid = sorted[Math.floor(sorted.length / 2)];
+  const mid = medianShifted(logs.map((l) => shiftedMinutes(l.sleep_start, BEDTIME_ANCHOR)));
   return {
-    start: minutesToClock((mid - 120 + 24 * 60) % (24 * 60)),
-    end: minutesToClock((mid + 60) % (24 * 60)),
+    start: minutesToClock((mid - 120 + DAY_MIN) % DAY_MIN, BEDTIME_ANCHOR),
+    end: minutesToClock((mid + 60) % DAY_MIN, BEDTIME_ANCHOR),
   };
 }
 
@@ -115,6 +131,7 @@ export function computeInsights(
     avgSleepHours: avg(durations),
     avgEnergy: avg(energies),
     medianBedtime: medianBedtime(lastWeek),
+    medianWake: medianWakeTime(lastWeek),
     melatoninWindow: melatoninWindow(lastWeek),
     nightsLogged: recent.length,
   };

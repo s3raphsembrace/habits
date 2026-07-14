@@ -1,6 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { getUserFromRequest, supabaseForRequest } from "@/lib/supabaseServer";
-import { computeInsights, DEFAULT_SLEEP_NEED_HOURS, SleepLog } from "@/lib/sleepDebt";
+import { NextResponse, type NextRequest } from "next/server";
+import { routeContext } from "@/lib/supabase/server";
+import { computeInsights, DEFAULT_SLEEP_NEED_HOURS, type SleepLog } from "@/lib/sleepDebt";
 import { buildRecommendations } from "@/lib/recommendations";
 
 /**
@@ -8,16 +8,9 @@ import { buildRecommendations } from "@/lib/recommendations";
  * recommendations for the authenticated user. All computation happens
  * server-side from the raw logs so the client stays thin.
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: "Not signed in" });
-
-  const supabase = supabaseForRequest(req);
+export async function GET(req: NextRequest) {
+  const { supabase, user } = await routeContext(req);
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const [logsResult, profileResult] = await Promise.all([
     supabase
@@ -28,12 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     supabase.from("profiles").select("sleep_need_hours").maybeSingle(),
   ]);
 
-  if (logsResult.error) return res.status(500).json({ error: logsResult.error.message });
+  if (logsResult.error) {
+    return NextResponse.json({ error: logsResult.error.message }, { status: 500 });
+  }
 
   const needHours = profileResult.data?.sleep_need_hours ?? DEFAULT_SLEEP_NEED_HOURS;
   const insights = computeInsights(logsResult.data as SleepLog[], Number(needHours));
 
-  return res.status(200).json({
+  return NextResponse.json({
     insights,
     recommendations: buildRecommendations(insights),
     sleepNeedHours: Number(needHours),

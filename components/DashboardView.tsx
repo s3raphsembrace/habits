@@ -1,8 +1,8 @@
-import { useRouter } from "next/router";
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import Layout from "@/components/Layout";
+import EnergyRhythmChart from "@/components/EnergyRhythmChart";
 import NoisePlayer from "@/components/NoisePlayer";
-import { apiFetch, useSession } from "@/lib/useSession";
 import type { SleepInsights } from "@/lib/sleepDebt";
 import type { Recommendation } from "@/lib/recommendations";
 
@@ -14,23 +14,18 @@ interface LogRow {
   note: string | null;
 }
 
-export default function Dashboard() {
-  const router = useRouter();
-  const { session, loading } = useSession();
+export default function DashboardView() {
   const [insights, setInsights] = useState<SleepInsights | null>(null);
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && !session) router.replace("/login");
-  }, [loading, session, router]);
-
   const load = useCallback(async () => {
     setError(null);
+    // Auth travels in the session cookie — no headers needed.
     const [insightsRes, logsRes] = await Promise.all([
-      apiFetch("/api/insights"),
-      apiFetch("/api/sleep-logs"),
+      fetch("/api/insights"),
+      fetch("/api/sleep-logs"),
     ]);
     if (!insightsRes.ok || !logsRes.ok) {
       setError("Could not load your data. Check your connection and Supabase setup.");
@@ -44,16 +39,14 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (session) load();
-  }, [session, load]);
+    load();
+  }, [load]);
 
   async function deleteLog(id: string) {
-    const res = await apiFetch(`/api/sleep-logs/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/sleep-logs/${id}`, { method: "DELETE" });
     if (res.ok) load();
     else setError("Could not delete that log.");
   }
-
-  if (loading || !session) return null;
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleString(undefined, {
@@ -64,9 +57,20 @@ export default function Dashboard() {
     });
 
   return (
-    <Layout title="Dashboard">
+    <>
       <h1>Your sleep</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
+
+      {insights && (
+        <section>
+          <h2>Today&apos;s rhythm</h2>
+          <EnergyRhythmChart
+            medianWake={insights.medianWake}
+            medianBedtime={insights.medianBedtime}
+            nightsLogged={insights.nightsLogged}
+          />
+        </section>
+      )}
 
       {insights && (
         <section className="stat-grid">
@@ -143,6 +147,6 @@ export default function Dashboard() {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 }

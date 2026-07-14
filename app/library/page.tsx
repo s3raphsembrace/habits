@@ -1,8 +1,11 @@
-import Layout from "@/components/Layout";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Sleep library" };
 
 /**
- * Static knowledge library. Content lives in code for v1; if it grows,
- * move it to MDX files or a Supabase table.
+ * Static knowledge library, rendered entirely on the server (zero JS shipped
+ * for this page's content). If it grows, move articles to MDX files or a
+ * Supabase table.
  */
 const ARTICLES = [
   {
@@ -31,9 +34,9 @@ const ARTICLES = [
   },
 ];
 
-export default function Library() {
+export default function LibraryPage() {
   return (
-    <Layout title="Sleep library">
+    <>
       <h1>Sleep knowledge library</h1>
       <p className="muted">
         Short, actionable summaries of the research behind Somnia&apos;s recommendations.
@@ -46,6 +49,6 @@ export default function Library() {
           </article>
         ))}
       </div>
-    </Layout>
+    </>
   );
 }
