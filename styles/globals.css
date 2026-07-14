@@ -285,6 +285,20 @@ th { color: var(--muted); font-weight: 600; }
 .coach-input-row { display: flex; gap: 0.5rem; }
 .coach-input-row input { flex: 1; }
 
+/* Premium */
+.premium-features { margin: 0.5rem 0 1rem; padding-left: 1.2rem; }
+.premium-features li { margin-bottom: 0.35rem; }
+.preset-row { display: flex; gap: 0.75rem; margin: 0.75rem 0 0.5rem; }
+.preset-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+.preset-swatch.selected { border-color: var(--text); outline: 2px solid var(--text); outline-offset: 1px; }
+.preset-swatch:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* Journal */
 .date-nav { display: flex; align-items: center; gap: 1rem; margin: 1rem 0 1.5rem; }
 .date-nav-current { flex: 1; display: flex; align-items: baseline; gap: 0.75rem; justify-content: center; }

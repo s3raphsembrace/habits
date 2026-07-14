@@ -102,3 +102,25 @@ create policy "update own notes" on public.daily_notes
 
 create policy "delete own notes" on public.daily_notes
   for delete using (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- Billing (Stripe). No insert/update policies on purpose: only the service
+-- role (Stripe webhook) writes, so users can't grant themselves premium.
+-- ---------------------------------------------------------------------------
+create table if not exists public.billing_customers (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  stripe_customer_id text unique,
+  is_premium boolean not null default false,
+  current_period_end timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.billing_customers enable row level security;
+
+create policy "read own billing" on public.billing_customers
+  for select using (auth.uid() = user_id);
+
+-- Premium personalization + integrations
+alter table public.profiles add column if not exists theme_preset text not null default 'cream'
+  check (theme_preset in ('cream', 'lavender', 'mint', 'sky', 'rose'));
+alter table public.profiles add column if not exists oura_token text;

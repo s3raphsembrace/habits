@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Habits: Sleep Quality",
+    "slug": "habits-sleep-quality",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#eeefe9"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.habits.sleepquality"
+    },
+    "android": {
+      "package": "com.habits.sleepquality"
+    }
+  }
+}

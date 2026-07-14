@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/log", label: "Log sleep", authed: true },
   { href: "/notes", label: "Journal", authed: true },
   { href: "/import", label: "Import", authed: true },
+  { href: "/premium", label: "Premium", authed: true },
   { href: "/library", label: "Library", authed: false },
   { href: "/contact", label: "Contact", authed: false },
 ];

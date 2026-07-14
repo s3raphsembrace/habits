@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { routeContext } from "@/lib/supabase/server";
+import { insertSessionsDeduped } from "@/lib/sessionsImport";
 
 const sessionSchema = z
   .object({
@@ -19,12 +20,9 @@ const importSchema = z.object({
   sessions: z.array(sessionSchema).min(1).max(500),
 });
 
-/** Two sessions are "the same night" if their starts are within 10 minutes. */
-const DEDUPE_MS = 10 * 60_000;
-
 /**
  * POST /api/sleep-logs/import — bulk ingest from Apple Health / Fitbit / Oura
- * file exports (parsed client-side) or a future mobile companion app.
+ * file exports (parsed client-side) or the mobile companion app.
  * Re-importing the same file is safe: near-duplicate sessions are skipped.
  */
 export async function POST(req: NextRequest) {
@@ -40,38 +38,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const incoming = parsed.data.sessions;
-  const starts = incoming.map((s) => new Date(s.sleep_start).getTime());
-  const rangeMin = new Date(Math.min(...starts) - DEDUPE_MS).toISOString();
-  const rangeMax = new Date(Math.max(...starts) + DEDUPE_MS).toISOString();
-
-  const { data: existing, error: fetchError } = await supabase
-    .from("sleep_logs")
-    .select("sleep_start")
-    .gte("sleep_start", rangeMin)
-    .lte("sleep_start", rangeMax)
-    .limit(2000);
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-
-  const known = (existing ?? []).map((r) => new Date(r.sleep_start).getTime());
-  const fresh: typeof incoming = [];
-  let skipped = 0;
-
-  for (const session of incoming) {
-    const t = new Date(session.sleep_start).getTime();
-    const isDupe =
-      known.some((k) => Math.abs(k - t) <= DEDUPE_MS) ||
-      fresh.some((f) => Math.abs(new Date(f.sleep_start).getTime() - t) <= DEDUPE_MS);
-    if (isDupe) skipped++;
-    else fresh.push(session);
+  try {
+    const result = await insertSessionsDeduped(supabase, user.id, parsed.data.sessions);
+    return NextResponse.json(result, { status: 201 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Import failed" },
+      { status: 500 }
+    );
   }
-
-  if (fresh.length > 0) {
-    const { error } = await supabase
-      .from("sleep_logs")
-      .insert(fresh.map((s) => ({ ...s, user_id: user.id })));
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ imported: fresh.length, skipped }, { status: 201 });
 }

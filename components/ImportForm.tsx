@@ -180,6 +180,74 @@ export default function ImportForm() {
           </p>
         )}
       </div>
+
+      <h2>Oura auto-sync</h2>
+      <OuraSync />
+    </div>
+  );
+}
+
+function OuraSync() {
+  const [token, setToken] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [needsPremium, setNeedsPremium] = useState(false);
+
+  async function sync(withToken: boolean) {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    setNeedsPremium(false);
+    const res = await fetch("/api/integrations/oura", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(withToken && token.trim() ? { token: token.trim() } : {}),
+    });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (res.ok) {
+      setToken("");
+      setMessage(
+        `Synced from Oura: ${body.imported} new night${body.imported === 1 ? "" : "s"}` +
+          (body.skipped > 0 ? `, ${body.skipped} already logged.` : ".")
+      );
+    } else {
+      setNeedsPremium(Boolean(body.premiumRequired));
+      setError(body.error ?? "Sync failed.");
+    }
+  }
+
+  return (
+    <div className="card stack">
+      <p className="muted">
+        Pull the last 30 days straight from the Oura API — no file export needed. Create a
+        personal access token at cloud.ouraring.com → Personal Access Tokens. Premium feature.
+      </p>
+      <label>
+        Oura personal access token
+        <input
+          type="password"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Paste token (stored in your account)"
+          maxLength={300}
+        />
+      </label>
+      <div className="coach-starters">
+        <button className="button primary" onClick={() => sync(true)} disabled={busy || !token.trim()}>
+          {busy ? "Syncing…" : "Save token & sync"}
+        </button>
+        <button className="button" onClick={() => sync(false)} disabled={busy}>
+          Sync with saved token
+        </button>
+      </div>
+      {message && <p className="form-notice">{message}</p>}
+      {error && (
+        <p className="form-error" role="alert">
+          {error} {needsPremium && <a href="/premium">Upgrade to Premium</a>}
+        </p>
+      )}
     </div>
   );
 }

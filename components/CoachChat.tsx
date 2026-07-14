@@ -19,6 +19,7 @@ export default function CoachChat() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
+  const [premiumRequired, setPremiumRequired] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   async function send(text: string) {
@@ -45,6 +46,7 @@ export default function CoachChat() {
     }
     const body = await res.json();
     setOffline(Boolean(body.offline));
+    setPremiumRequired(Boolean(body.premiumRequired));
     setMessages([...history, { role: "assistant", content: body.reply }]);
     // Scroll to the newest reply after render
     requestAnimationFrame(() => {
@@ -85,10 +87,17 @@ export default function CoachChat() {
         </div>
       )}
 
-      {offline && (
+      {premiumRequired ? (
         <p className="form-notice">
-          Running without an AI key — set GEMINI_API_KEY to enable conversational answers.
+          The conversational AI coach is a Premium feature — <a href="/premium">upgrade</a> for
+          unlimited back-and-forth answers.
         </p>
+      ) : (
+        offline && (
+          <p className="form-notice">
+            Running without an AI key — set GEMINI_API_KEY to enable conversational answers.
+          </p>
+        )
       )}
       {error && <p className="form-error" role="alert">{error}</p>}
 

@@ -94,6 +94,48 @@ Without a key the coach still works — it answers from the rule-based engine in
 `lib/recommendations.ts` and says so. The key stays server-side (`app/api/coach/route.ts`);
 it is never shipped to the browser.
 
+## Premium (Stripe)
+
+Premium unlocks the conversational AI coach, theme color presets, and Oura
+auto-sync. Billing state lives in `billing_customers`, which has **no user
+write policies** — only the Stripe webhook (service role) can write it, so
+premium can't be self-granted through the public API.
+
+Setup:
+1. In [Stripe](https://dashboard.stripe.com): create a Product with a recurring
+   Price; copy the price id (`price_…`).
+2. Developers → Webhooks → Add endpoint: `https://<your-app>/api/stripe/webhook`
+   with events `checkout.session.completed`, `customer.subscription.updated`,
+   `customer.subscription.deleted`; copy the signing secret (`whsec_…`).
+3. Env vars (locally in `.env.local` and on Vercel → Settings → Environment
+   Variables, then redeploy):
+
+| Variable | Purpose |
+|---|---|
+| `STRIPE_SECRET_KEY` | Stripe API key (`sk_…`) |
+| `STRIPE_PRICE_ID` | The subscription price (`price_…`) |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_…`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (dashboard → API) — webhook only |
+| `NEXT_PUBLIC_APP_URL` | Your deployed URL, for checkout redirects |
+| `GEMINI_API_KEY` | AI coach (premium answers) |
+
+4. Run `supabase/migrations/003_premium.sql` in the Supabase SQL editor.
+5. Test with Stripe test mode + card `4242 4242 4242 4242`. For local webhook
+   testing use `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+
+## Oura auto-sync (Premium)
+
+On `/import`, paste a personal access token from
+cloud.ouraring.com → Personal Access Tokens; the app pulls the last 30 days of
+sleep from the Oura v2 API and inserts them with the same dedupe as file
+imports (re-syncing is idempotent).
+
+## Mobile app (Expo)
+
+`mobile/` is a React Native companion app — same Supabase login, calls this
+app's REST API with bearer tokens. See [mobile/README.md](mobile/README.md)
+for setup and the HealthKit roadmap.
+
 ## Journal
 
 **/notes** stores one row per user per day (`daily_notes`): Activities, Meals, Goals,

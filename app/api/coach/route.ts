@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { routeContext } from "@/lib/supabase/server";
 import { fetchSleepContext } from "@/lib/sleepContext";
+import { isPremium } from "@/lib/premium";
 
 const coachSchema = z.object({
   messages: z
@@ -54,6 +55,16 @@ export async function POST(req: NextRequest) {
     .select("activities, meals, goals, notes")
     .eq("note_date", today)
     .maybeSingle();
+
+  // The conversational AI coach is a Premium feature; free users get the
+  // rule engine's take on their data (still genuinely useful, zero cost).
+  if (!(await isPremium(supabase))) {
+    const reply = [
+      "Here's what the rule engine says about your data (the conversational AI coach is a Premium feature):",
+      ...recommendations.map((r) => `• ${r.title} — ${r.body}`),
+    ].join("\n\n");
+    return NextResponse.json({ reply, offline: true, premiumRequired: true });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

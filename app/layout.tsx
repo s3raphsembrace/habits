@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Nav from "@/components/Nav";
+import ThemePresetApplier from "@/components/ThemePresetApplier";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <ThemePresetApplier />
         <Nav />
         <main className="container">{children}</main>
         <footer className="site-footer">

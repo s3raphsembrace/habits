@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   // Match whole segments only — startsWith("/log") would also catch "/login"
   // and send logged-out visitors into a redirect loop.
-  const needsAuth = ["/dashboard", "/log", "/notes", "/import"].some(
+  const needsAuth = ["/dashboard", "/log", "/notes", "/import", "/premium"].some(
     (p) => path === p || path.startsWith(`${p}/`)
   );
 
@@ -50,5 +50,12 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/log/:path*", "/notes/:path*", "/import/:path*", "/login"],
+  matcher: [
+    "/dashboard/:path*",
+    "/log/:path*",
+    "/notes/:path*",
+    "/import/:path*",
+    "/premium/:path*",
+    "/login",
+  ],
 };
