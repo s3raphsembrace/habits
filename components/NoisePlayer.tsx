@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
 
 /**
  * Dependency-free sleep-sound generator using the Web Audio API.
@@ -46,6 +47,7 @@ export default function NoisePlayer() {
     src.start();
     nodesRef.current = { src, gain };
     setPlaying(true);
+    posthog.capture("noise_player_started");
   }
 
   useEffect(() => {

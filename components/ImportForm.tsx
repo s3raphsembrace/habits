@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 
 interface Session {
   sleep_start: string;
@@ -102,9 +103,16 @@ export default function ImportForm() {
         setError(
           "No sleep sessions found. Expected an Apple Health export.xml or a CSV with start/end columns."
         );
+      } else {
+        const isAppleHealth = text.includes("HKCategoryTypeIdentifierSleepAnalysis");
+        posthog.capture("sleep_import_file_parsed", {
+          sessions_found: parsed.length,
+          source: isAppleHealth ? "apple_health" : "csv",
+        });
       }
       setSessions(parsed);
-    } catch {
+    } catch (err) {
+      posthog.captureException(err);
       setError("Could not read that file.");
     }
     setParsing(false);
@@ -132,6 +140,10 @@ export default function ImportForm() {
       imported += body.imported;
       skipped += body.skipped;
     }
+    posthog.capture("sleep_import_completed", {
+      imported,
+      skipped,
+    });
     setResult({ imported, skipped });
     setSessions([]);
     setBusy(false);

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { routeContext } from "@/lib/supabase/server";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const sessionSchema = z
   .object({
@@ -72,6 +73,18 @@ export async function POST(req: NextRequest) {
       .insert(fresh.map((s) => ({ ...s, user_id: user.id })));
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: "sleep_logs_imported",
+    properties: {
+      imported: fresh.length,
+      skipped,
+      total_submitted: incoming.length,
+    },
+  });
+  await posthog.flush();
 
   return NextResponse.json({ imported: fresh.length, skipped }, { status: 201 });
 }

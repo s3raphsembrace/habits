@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { supabaseServer } from "@/lib/supabase/server";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -32,6 +33,16 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: "anonymous",
+    event: "contact_message_received",
+    properties: {
+      message_length: parsed.data.message.length,
+    },
+  });
+  await posthog.flush();
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
