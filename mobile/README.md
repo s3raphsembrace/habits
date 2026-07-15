@@ -15,6 +15,40 @@ recommendations) + quick sleep logging.
 3. `npx expo start`, then scan the QR code with the **Expo Go** app
    (App Store / Play Store).
 
+## Automatic free deployment (EAS Update)
+
+Every push to `main` that touches `mobile/` publishes an over-the-air JS update
+to Expo's CDN via `.github/workflows/eas-update.yml`. Anyone running the app in
+**Expo Go** (or a dev/preview build) gets the new version on next launch — no
+rebuild, no store review, no cost. This is the free, automatic path.
+
+One-time setup:
+
+1. Create a free account at [expo.dev](https://expo.dev), then `npm i -g eas-cli`
+   and `eas login`.
+2. From `mobile/`, run `eas init` (creates the EAS project, writes the
+   `projectId` into `app.json`) then `eas update:configure` (adds the update URL
+   + `runtimeVersion` and installs `expo-updates`).
+3. Create an **access token** at expo.dev → Account settings → Access tokens.
+4. In GitHub → repo **Settings → Secrets and variables → Actions → New
+   repository secret**, add `EXPO_TOKEN` = that token.
+5. Commit the `app.json` changes from step 2 and push. The workflow runs; watch
+   it under the repo's **Actions** tab.
+6. Give testers the QR code / project link from expo.dev; they open it in Expo
+   Go and always get the latest published update.
+
+### What "free" does and doesn't cover
+
+- **Free & automatic:** OTA JS updates to Expo Go / existing dev builds (this
+  workflow). EAS Update's free tier covers a typical personal/beta project.
+- **Free but limited/manual:** `eas build --profile preview` produces an
+  installable Android **APK** you can sideload (free tier = a limited number of
+  builds/month on a shared queue). Good for putting a real app on your own phone
+  without a store.
+- **Not free:** publishing to the Apple App Store ($99/yr) or Google Play
+  ($25 one-time). The store listing is the only paid part; the build pipeline
+  itself has a free tier.
+
 ## Roadmap: HealthKit / Google Fit auto-detection
 
 Reading sleep from Apple Health or screen-activity signals requires native
